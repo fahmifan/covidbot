@@ -68,7 +68,7 @@ func (p *PikobarBot) ScheduleDaily() error {
 	}
 
 	timeLayout := "2006-01-02"
-	err = gocron.Every(1).Day().At("11:05").Do(func() error {
+	err = gocron.Every(1).Day().At("09:00").Do(func() error {
 		fileName := time.Now().Format(timeLayout) + ".json"
 		dst := path.Join(dir, fileName)
 		file, err := os.Create(dst)
