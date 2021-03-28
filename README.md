@@ -16,3 +16,8 @@ To deploy run:
 ```
 make deploy host=example.com
 ```
+
+## TODO
+- [ ] add webhook
+- [ ] add more features
+    - filter statuses by date
