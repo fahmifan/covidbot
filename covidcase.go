@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const timeLayout = "2006-01-02"
+
 type Case struct {
 	ClosecontactDikarantina int     `json:"closecontact_dikarantina"`
 	ClosecontactDiscarded   int     `json:"closecontact_discarded"`
@@ -38,7 +40,7 @@ type Item struct {
 }
 
 func (d Item) String() string {
-	return fmt.Sprintf("Tgl: %s, Kasus Aktif: %d, Kumulatif: %d\n",
+	return fmt.Sprintf("Tgl: %s, Aktif: %d, Kumulatif: %d\n",
 		d.Tanggal,
 		d.Harian.ConfirmationDiisolasi,
 		d.Kumulatif.ConfirmationDiisolasi,
@@ -53,7 +55,7 @@ type KabKot struct {
 
 // Today find today's item
 func (kk KabKot) Today() Item {
-	return kk.Date(time.Now().Format("2006-01-02"))
+	return kk.Date(time.Now().Format(timeLayout))
 }
 
 // Date find an Item by date

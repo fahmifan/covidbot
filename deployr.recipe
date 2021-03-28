@@ -1,0 +1,2 @@
+CopyFile ./bin/covidbot /home/deployr/admin/covidbot
+Sudo Run "sudo systemctl restart covidbot.service"

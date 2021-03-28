@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/jasonlvhit/gocron"
@@ -68,7 +69,7 @@ func (p *PikobarBot) ScheduleDaily() error {
 	}
 
 	timeLayout := "2006-01-02"
-	err = gocron.Every(1).Day().At("11:05").Do(func() error {
+	err = gocron.Every(1).Day().At("09:00").Do(func() error {
 		fileName := time.Now().Format(timeLayout) + ".json"
 		dst := path.Join(dir, fileName)
 		file, err := os.Create(dst)
@@ -101,9 +102,22 @@ func (p *PikobarBot) ScheduleDaily() error {
 
 		bandungKode := "3273"
 		kk := cc.FilterKabKots(bandungKode)
+		now := time.Now()
+		oneDay := time.Hour * 24
+		last3Days := []Item{
+			kk.Date(now.Format(timeLayout)),
+			kk.Date(now.Add(-oneDay).Format(timeLayout)),
+			kk.Date(now.Add(-2 * oneDay).Format(timeLayout)),
+		}
+		notifMsg := strings.Join([]string{
+			last3Days[0].String(),
+			last3Days[1].String(),
+			last3Days[2].String(),
+		}, "\n")
+		notifMsg = fmt.Sprintf("Update from Last 3 days\n\n%s", notifMsg)
 
 		logrus.Info("send notifications")
-		err = p.Notifier.NotifyAll(kk.Today().String())
+		err = p.Notifier.NotifyAll(notifMsg)
 		if err != nil {
 			logrus.Error(err)
 			return err
