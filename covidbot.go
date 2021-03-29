@@ -130,6 +130,6 @@ func (p *PikobarBot) ScheduleDaily() error {
 		return err
 	}
 
-	gocron.RunAll()
+	<-gocron.Start()
 	return nil
 }
