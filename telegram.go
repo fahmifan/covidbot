@@ -1,16 +1,22 @@
 package covidbot
 
 import (
+	"context"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/sirupsen/logrus"
 )
 
+// TelegramBotCfg ..
 type TelegramBotCfg struct {
-	Token  string
-	Debug  bool
 	botAPI *tgbotapi.BotAPI
+
+	UserService UserService
+	Token       string
+	Debug       bool
 }
 
+// TelegramBot ..
 type TelegramBot struct {
 	*TelegramBotCfg
 }
@@ -36,24 +42,19 @@ func MustTelegramBot(cfg *TelegramBotCfg) *TelegramBot {
 	return bot
 }
 
+// NotifyAll notify all users
 func (t *TelegramBot) NotifyAll(text string) error {
-	updates, err := t.botAPI.GetUpdates(tgbotapi.UpdateConfig{
-		Offset:  0,
-		Limit:   100,
-		Timeout: 3600,
+	err := t.UserService.ForEach(context.Background(), func(user User) error {
+		msg := tgbotapi.NewMessage(user.ChatID, text)
+		_, err := t.botAPI.Send(msg)
+		if err != nil {
+			logrus.WithField("user", Dumps(user)).Error(err)
+		}
+		return nil
 	})
 	if err != nil {
 		logrus.Error(err)
-		return err
 	}
 
-	for _, update := range updates {
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, text)
-		_, err := t.botAPI.Send(msg)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return err
 }
