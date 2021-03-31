@@ -98,7 +98,13 @@ func parseCMD() *cobra.Command {
 
 			bandungKode := "3273"
 			kk := cc.FilterKabKots(bandungKode)
-			fmt.Println(kk.Today())
+			now := time.Now()
+			oneDay := time.Hour * 24
+			fmt.Print(
+				kk.Date(now.Format(timeLayout)),
+				kk.Date(now.Add(-oneDay).Format(timeLayout)),
+				kk.Date(now.Add(-2*oneDay).Format(timeLayout)),
+			)
 		},
 	}
 }
