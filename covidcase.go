@@ -40,7 +40,7 @@ type Item struct {
 }
 
 func (d Item) String() string {
-	return fmt.Sprintf("Tgl: %s, Aktif: %d, Kumulatif: %d\n",
+	return fmt.Sprintf("Tgl: %s, Konfirmasi Baru: %d, Kasus Aktif: %d\n",
 		d.Tanggal,
 		d.Harian.ConfirmationDiisolasi,
 		d.Kumulatif.ConfirmationDiisolasi,
