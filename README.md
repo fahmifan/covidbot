@@ -18,6 +18,7 @@ make deploy host=example.com
 ```
 
 ## TODO
-- [ ] add webhook
+- [x] add webhook
+- [x] add sync updates to telegram
 - [ ] add more features
     - filter statuses by date
