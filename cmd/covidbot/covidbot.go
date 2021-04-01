@@ -10,6 +10,7 @@ import (
 	"github.com/fahmifan/covidbot"
 	"github.com/fahmifan/covidbot/bbolt"
 	"github.com/fahmifan/covidbot/http"
+	"github.com/jasonlvhit/gocron"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -74,26 +75,30 @@ func crawlerCMD() *cobra.Command {
 				UserService: userService,
 			})
 
+			if err := crawler.NewGoCronDaily(); err != nil {
+				logrus.Error(err)
+			}
+			if err := telegramBot.NewGoCronSyncUpdates(); err != nil {
+				logrus.Error(err)
+			}
+
 			// run services
 			quit := make(chan os.Signal, 1)
 			signal.Notify(quit, os.Interrupt)
-
-			go func() {
-				logrus.Info("run crawler everyday..")
-				if err := crawler.ScheduleDaily(); err != nil {
-					logrus.Error(err)
-				}
-				logrus.Info("stopping worker")
-			}()
-
 			go func() {
 				if err := server.Run(); err != nil {
 					logrus.Error(err)
 				}
 			}()
+			var stopCron chan bool
+			go func() {
+				logrus.Info("run cron job")
+				stopCron = gocron.Start()
+			}()
 
 			// block main goroutine
 			<-quit
+			stopCron <- true
 
 			ctx, finish := context.WithTimeout(context.Background(), time.Second*30)
 			defer finish()

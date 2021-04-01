@@ -2,8 +2,11 @@ package covidbot
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/jasonlvhit/gocron"
 	"github.com/sirupsen/logrus"
 )
 
@@ -57,4 +60,65 @@ func (t *TelegramBot) NotifyAll(text string) error {
 	}
 
 	return err
+}
+
+func (t *TelegramBot) NewGoCronSyncUpdates() error {
+	err := gocron.Every(1).Hour().Do(t.SyncUpdates)
+	if err != nil {
+		logrus.Error(err)
+	}
+	return err
+}
+
+// SyncUpdates sync update with telegram bot api
+func (t *TelegramBot) SyncUpdates() error {
+	logrus.Info("start sync updates")
+	offset := 0
+	limit := 100
+	for {
+		updates, err := t.botAPI.GetUpdates(tgbotapi.UpdateConfig{
+			Offset: offset,
+			Limit:  limit,
+		})
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+
+		if len(updates) == 0 {
+			break
+		}
+
+		offset = updates[len(updates)-1].UpdateID + 1
+		err = t.syncUpdates(updates)
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+	}
+
+	logrus.Info("finished sync updates")
+	return nil
+}
+
+func (t *TelegramBot) syncUpdates(updates []tgbotapi.Update) error {
+	for _, update := range updates {
+		if update.Message == nil || update.Message.Chat == nil {
+			continue
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+		err := t.UserService.Create(ctx, &User{
+			Username:         update.Message.Chat.UserName,
+			TelegramUpdateID: fmt.Sprint(update.UpdateID),
+			ChatID:           update.Message.Chat.ID,
+		})
+		if err != nil {
+			logrus.Error(err)
+			return err
+		}
+	}
+
+	return nil
 }
