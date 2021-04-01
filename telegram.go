@@ -48,8 +48,7 @@ func MustTelegramBot(cfg *TelegramBotCfg) *TelegramBot {
 // NotifyAll notify all users
 func (t *TelegramBot) NotifyAll(text string) error {
 	err := t.UserService.ForEach(context.Background(), func(user User) error {
-		msg := tgbotapi.NewMessage(user.ChatID, text)
-		_, err := t.botAPI.Send(msg)
+		err := t.Notify(user.ChatID, text)
 		if err != nil {
 			logrus.WithField("user", Dumps(user)).Error(err)
 		}
@@ -59,6 +58,16 @@ func (t *TelegramBot) NotifyAll(text string) error {
 		logrus.Error(err)
 	}
 
+	return err
+}
+
+// Notify notify a user
+func (t *TelegramBot) Notify(chatID int64, text string) error {
+	msg := tgbotapi.NewMessage(chatID, text)
+	_, err := t.botAPI.Send(msg)
+	if err != nil {
+		logrus.WithField("user", Dumps(chatID)).Error(err)
+	}
 	return err
 }
 
