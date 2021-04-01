@@ -1,3 +1,4 @@
+Sudo Run "sudo systemctl stop covidbot.service"
 CopyFile ./bin/covidbot /home/deployr/admin/covidbot/covidbot
 Sudo Run "sudo chmod +x /home/deployr/admin/covidbot/covidbot"
-Sudo Run "sudo systemctl restart covidbot.service"
+Sudo Run "sudo systemctl start covidbot.service"

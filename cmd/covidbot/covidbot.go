@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/fahmifan/covidbot"
+	"github.com/fahmifan/covidbot/bbolt"
+	"github.com/fahmifan/covidbot/http"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -15,6 +18,7 @@ import (
 var timeLayout = "2006-01-02"
 
 func init() {
+	logrus.SetReportCaller(true)
 	err := godotenv.Load()
 	if err != nil {
 		logrus.Error("Error loading .env file")
@@ -53,25 +57,49 @@ func crawlerCMD() *cobra.Command {
 		Use:   "everyday",
 		Short: "craw every day",
 		Run: func(cmd *cobra.Command, args []string) {
+			boltDB := covidbot.MustOpenBoltDB()
+			userService := bbolt.NewUserService(&bbolt.UserServiceCfg{
+				DB: boltDB,
+			})
 			telegramBot := covidbot.MustTelegramBot(&covidbot.TelegramBotCfg{
-				Token: os.Getenv("TELEGRAM_BOT_TOKEN"),
+				Token:       os.Getenv("TELEGRAM_BOT_TOKEN"),
+				UserService: userService,
 			})
 			crawler := &covidbot.PikobarBot{
 				APIKey:   os.Getenv("PIKOBAR_API_KEY"),
 				Notifier: telegramBot,
 			}
+			server := http.NewServer(&http.Config{
+				Port:        os.Getenv("PORT"),
+				UserService: userService,
+			})
 
+			// run services
 			quit := make(chan os.Signal, 1)
 			signal.Notify(quit, os.Interrupt)
 
 			go func() {
 				logrus.Info("run crawler everyday..")
 				if err := crawler.ScheduleDaily(); err != nil {
-					logrus.Fatal(err)
+					logrus.Error(err)
+				}
+				logrus.Info("stopping worker")
+			}()
+
+			go func() {
+				if err := server.Run(); err != nil {
+					logrus.Error(err)
 				}
 			}()
+
+			// block main goroutine
 			<-quit
-			logrus.Info("stopped")
+
+			ctx, finish := context.WithTimeout(context.Background(), time.Second*30)
+			defer finish()
+			if err := server.Stop(ctx); err != nil {
+				logrus.Error(err)
+			}
 		},
 	}
 
@@ -98,7 +126,13 @@ func parseCMD() *cobra.Command {
 
 			bandungKode := "3273"
 			kk := cc.FilterKabKots(bandungKode)
-			fmt.Println(kk.Today())
+			now := time.Now()
+			oneDay := time.Hour * 24
+			fmt.Print(
+				kk.Date(now.Format(timeLayout)),
+				kk.Date(now.Add(-oneDay).Format(timeLayout)),
+				kk.Date(now.Add(-2*oneDay).Format(timeLayout)),
+			)
 		},
 	}
 }
