@@ -141,3 +141,31 @@ func parseCMD() *cobra.Command {
 		},
 	}
 }
+
+func testerCMD() *cobra.Command {
+	cmdTester := &cobra.Command{Use: "test"}
+
+	cmdNotify := &cobra.Command{Use: "notify", Short: "notify telegram user"}
+	cmdNotify.Flags().Int64("chatID", 0, "--chatID 123")
+	cmdNotify.Run = func(cmd *cobra.Command, args []string) {
+		chatID := covidbot.StringToInt64(cmd.Flag("chatID").Value.String())
+		if chatID <= 0 {
+			logrus.WithField("chatID", chatID).Error("invalid chatID")
+			return
+		}
+
+		telegramBot := covidbot.MustTelegramBot(&covidbot.TelegramBotCfg{
+			Token: os.Getenv("TELEGRAM_BOT_TOKEN"),
+		})
+
+		err := telegramBot.Notify(chatID, "test")
+		if err != nil {
+			logrus.WithField("chatID", chatID).Error(err)
+			return
+		}
+		logrus.Info("success")
+	}
+
+	cmdTester.AddCommand(cmdNotify)
+	return cmdTester
+}

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -69,7 +70,7 @@ func (p *PikobarBot) NewGoCronDaily() error {
 		return err
 	}
 
-	return gocron.Every(1).Day().At("09:00").Do(p.crawlAndNotify)
+	return gocron.Every(1).Days().At("09:00").Do(p.crawlAndNotify)
 }
 
 func (p *PikobarBot) crawlAndNotify() error {
@@ -119,7 +120,8 @@ func (p *PikobarBot) crawlAndNotify() error {
 	}, "\n")
 	notifMsg = fmt.Sprintf("Update from Last 3 days\n\n%s", notifMsg)
 
-	logrus.Info("send notifications")
+	logrus.WithField("msgs", notifMsg).Info("send notifications")
+
 	err = p.Notifier.NotifyAll(notifMsg)
 	if err != nil {
 		logrus.Error(err)
@@ -128,4 +130,12 @@ func (p *PikobarBot) crawlAndNotify() error {
 
 	logrus.Info("success notify all users")
 	return nil
+}
+
+func StringToInt64(s string) int64 {
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return v
 }

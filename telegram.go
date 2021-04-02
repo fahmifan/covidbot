@@ -72,7 +72,7 @@ func (t *TelegramBot) Notify(chatID int64, text string) error {
 }
 
 func (t *TelegramBot) NewGoCronSyncUpdates() error {
-	err := gocron.Every(1).Hour().Do(t.SyncUpdates)
+	err := gocron.Every(1).Hours().Do(t.SyncUpdates)
 	if err != nil {
 		logrus.Error(err)
 	}
