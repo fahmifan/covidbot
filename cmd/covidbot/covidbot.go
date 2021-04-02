@@ -9,9 +9,9 @@ import (
 
 	"github.com/fahmifan/covidbot"
 	"github.com/fahmifan/covidbot/bbolt"
+	"github.com/fahmifan/covidbot/config"
 	"github.com/fahmifan/covidbot/http"
 	"github.com/jasonlvhit/gocron"
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -20,10 +20,6 @@ var timeLayout = "2006-01-02"
 
 func init() {
 	logrus.SetReportCaller(true)
-	err := godotenv.Load()
-	if err != nil {
-		logrus.Error("Error loading .env file")
-	}
 }
 
 var rootCMD = &cobra.Command{
@@ -36,7 +32,7 @@ func crawlerCMD() *cobra.Command {
 		Short: "crawl into pikobar api and output a json",
 		Run: func(cmd *cobra.Command, args []string) {
 			crawler := covidbot.PikobarBot{
-				APIKey: os.Getenv("PIKOBAR_API_KEY"),
+				APIKey: config.PikobarAPIKey(),
 			}
 			filename := time.Now().Format(timeLayout)
 			f, err := os.Create(fmt.Sprintf("%s.json", filename))
@@ -63,15 +59,15 @@ func crawlerCMD() *cobra.Command {
 				DB: boltDB,
 			})
 			telegramBot := covidbot.MustTelegramBot(&covidbot.TelegramBotCfg{
-				Token:       os.Getenv("TELEGRAM_BOT_TOKEN"),
+				Token:       config.TelegramBotToken(),
 				UserService: userService,
 			})
 			crawler := &covidbot.PikobarBot{
-				APIKey:   os.Getenv("PIKOBAR_API_KEY"),
+				APIKey:   config.PikobarAPIKey(),
 				Notifier: telegramBot,
 			}
 			server := http.NewServer(&http.Config{
-				Port:        os.Getenv("PORT"),
+				Port:        config.Port(),
 				UserService: userService,
 			})
 
@@ -155,7 +151,7 @@ func testerCMD() *cobra.Command {
 		}
 
 		telegramBot := covidbot.MustTelegramBot(&covidbot.TelegramBotCfg{
-			Token: os.Getenv("TELEGRAM_BOT_TOKEN"),
+			Token: config.TelegramBotToken(),
 		})
 
 		err := telegramBot.Notify(chatID, "test")
