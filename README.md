@@ -11,7 +11,7 @@ help              Help about any command
 ```
 
 [deployr](https://github.com/skx/deployr) is used to deploy the binary to server. 
-It is using ssh to copy the binary and restart the systemd. 
+It uses ssh to copy the binary and restart the systemd. 
 To deploy run:
 ```
 make deploy host=example.com
