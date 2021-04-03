@@ -141,6 +141,12 @@ func parseCMD() *cobra.Command {
 func testerCMD() *cobra.Command {
 	cmdTester := &cobra.Command{Use: "test"}
 
+	cmdReadDB := &cobra.Command{Use: "ping-db"}
+	cmdReadDB.Run = func(cmd *cobra.Command, args []string) {
+		_ = covidbot.MustOpenBoltDB()
+		logrus.Info("pong")
+	}
+
 	cmdNotify := &cobra.Command{Use: "notify", Short: "notify telegram user"}
 	cmdNotify.Flags().Int64("chatID", 0, "--chatID 123")
 	cmdNotify.Run = func(cmd *cobra.Command, args []string) {
@@ -162,6 +168,6 @@ func testerCMD() *cobra.Command {
 		logrus.Info("success")
 	}
 
-	cmdTester.AddCommand(cmdNotify)
+	cmdTester.AddCommand(cmdNotify, cmdReadDB)
 	return cmdTester
 }
