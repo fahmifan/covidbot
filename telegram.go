@@ -72,7 +72,7 @@ func (t *TelegramBot) Notify(chatID int64, text string) error {
 }
 
 func (t *TelegramBot) NewGoCronSyncUpdates() error {
-	err := gocron.Every(1).Hour().Do(t.SyncUpdates)
+	err := gocron.Every(1).Hours().Do(t.SyncUpdates)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -118,13 +118,21 @@ func (t *TelegramBot) syncUpdates(updates []tgbotapi.Update) error {
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
-		err := t.UserService.Create(ctx, &User{
-			Username:         update.Message.Chat.UserName,
+
+		username := update.Message.Chat.UserName
+		chatID := update.Message.Chat.ID
+		if username == "" {
+			username = fmt.Sprint(chatID)
+		}
+
+		user := &User{
+			Username:         username,
 			TelegramUpdateID: fmt.Sprint(update.UpdateID),
-			ChatID:           update.Message.Chat.ID,
-		})
+			ChatID:           chatID,
+		}
+		err := t.UserService.Create(ctx, user)
 		if err != nil {
-			logrus.Error(err)
+			logrus.WithField("user", Dumps(user)).Error(err)
 			return err
 		}
 	}

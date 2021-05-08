@@ -1,0 +1,12 @@
+[Unit]
+Description=Covidbot Daily Report
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=10
+ExecStart=/home/deployr/admin/covidbot/covidbot crawl everyday
+WorkingDirectory=/home/deployr/admin/covidbot
+
+[Install]
+WantedBy=default.target
