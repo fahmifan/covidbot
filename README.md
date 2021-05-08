@@ -19,13 +19,13 @@ To deploy using `deployr` follow these instructions:
 - login as `deployr`
 - create a systemd unit file in `/home/deployr/.config/systemd/user/covidbot.service`
     - check `example` folder for references
-- if using systemd unit file from exmaple, then create a folder in `/home/deployr/admin`
+- if using systemd unit file from example, then create a folder in `/home/deployr/admin`
 - create env file `touch /home/deployr/admin/.env`
     - reference: `.env.example`
 - enable the user systemd to run on boot: 
     - login as `root` then run `loginctl enable-linger deployr`
-- reload the current user systemd `systemd --user daemon-reload`
-- enable the service `systemd --user enable covidbot.service`
+- reload the current user systemd `systemctl --user daemon-reload`
+- enable the service `systemctl --user enable covidbot.service`
 - from your local machine, run `make deploy host=example.com`
     - `example.com` should be your server host or IP
 - check if the service is running well `journalctl --user -f -u covidbot.service`
